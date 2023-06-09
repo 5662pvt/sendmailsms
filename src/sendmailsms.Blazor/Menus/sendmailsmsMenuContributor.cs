@@ -52,13 +52,19 @@ public class sendmailsmsMenuContributor : IMenuContributor
         context.Menu.AddItem(
            new ApplicationMenuItem(
                "BooksStore",
-               l["Menu:BookStore"],
+               l["Menu:mail"],
                icon: "fa fa-book"
            ).AddItem(
                new ApplicationMenuItem(
                    "BooksStore.Books",
-                   l["Menu:Books"],
-                   url: "/books"
+                   l["Menu:UpdateSetting"],
+                   url: "/update"
+               )
+           ).AddItem(
+               new ApplicationMenuItem(
+                   "BooksStore.Books",
+                   l["Menu:SenndMail"],
+                   url: "/sendmail"
                )
            )
        );

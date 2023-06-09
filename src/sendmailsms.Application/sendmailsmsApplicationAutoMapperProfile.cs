@@ -17,5 +17,11 @@ public class sendmailsmsApplicationAutoMapperProfile : Profile
         CreateMap<Send.SendTestEmailViewModel, SendTestEmailInput>();
 
         CreateMap<Send.UpdateEmailSettingsViewModel, UpdateEmailSettingsDto>();
+
+        CreateMap<EmailSettingsDto, Mail.UpdateEmailSettingsViewModel>();
+
+        CreateMap<Mail.SendTestEmailViewModel, SendTestEmailInput>();
+
+        CreateMap<Mail.UpdateEmailSettingsViewModel, UpdateEmailSettingsDto>();
     }
 }

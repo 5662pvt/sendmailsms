@@ -14,15 +14,13 @@ using Volo.Abp.SettingManagement.Blazor;
 using Volo.Abp.SettingManagement.Localization;
 using Volo.Abp.TextTemplating;
 
+
 namespace sendmailsms.Blazor.Pages
 {
-    public partial class Send 
+    public partial class Mail
     {
         [Inject]
         protected IEmailSettingsAppService EmailSettingsAppService { get; set; }
-
-        //[Inject]
-        //protected IPermissionChecker PermissionChecker { get; set; }
 
         [Inject]
         private ICurrentApplicationConfigurationCacheResetService CurrentApplicationConfigurationCacheResetService { get; set; }
@@ -40,11 +38,10 @@ namespace sendmailsms.Blazor.Pages
 
         protected Modal SendTestEmailModal;
 
-       // protected bool HasSendTestEmailPermission { get; set; }
+        protected EmailTemplate test;
 
 
-
-        public Send()
+        public Mail()
         {
             ObjectMapperContext = typeof(AbpSettingManagementBlazorModule);
             LocalizationResource = typeof(AbpSettingManagementResource);
@@ -55,7 +52,7 @@ namespace sendmailsms.Blazor.Pages
             try
             {
                 EmailSettings = ObjectMapper.Map<EmailSettingsDto, UpdateEmailSettingsViewModel>(await EmailSettingsAppService.GetAsync());
-                //HasSendTestEmailPermission = await PermissionChecker.IsGrantedAsync(SettingManagementPermissions.EmailingTest);
+                // HasSendTestEmailPermission = await PermissionChecker.IsGrantedAsync(SettingManagementPermissions.EmailingTest);
                 SendTestEmailInput = new SendTestEmailViewModel();
             }
             catch (Exception ex)
@@ -64,26 +61,50 @@ namespace sendmailsms.Blazor.Pages
             }
         }
 
-        protected virtual async Task UpdateSettingsAsync()
+        protected virtual async Task OpenSendTestEmailModalAsync()
         {
             try
-            {
-                if (!await EmailSettingValidation.ValidateAll())
+            {          
+                //await EmailSettingTestValidation.ClearAll();
+                var emailSettings = await EmailSettingsAppService.GetAsync();
+                SendTestEmailInput = new SendTestEmailViewModel
                 {
-                    return;
-                }
-
-                await EmailSettingsAppService.UpdateAsync(ObjectMapper.Map<UpdateEmailSettingsViewModel, UpdateEmailSettingsDto>(EmailSettings));
-
-                await CurrentApplicationConfigurationCacheResetService.ResetAsync();
-
-                await UiMessageService.Success(L["SuccessfullySaved"]);
+                    SenderEmailAddress = emailSettings.DefaultFromAddress,
+                    TargetEmailAddress = CurrentUser.Email,
+                    Subject = L["TestEmailSubject", new Random().Next(1000, 9999)],
+                    Body = L["TestEmailBody"]
+                };
+                await SendTestEmailModal.Show();
             }
             catch (Exception ex)
             {
                 await HandleErrorAsync(ex);
             }
-        }      
+        }
+
+        protected virtual Task CloseSendTestEmailModalAsync()
+        {
+            return InvokeAsync(SendTestEmailModal.Hide);
+        }
+
+        protected virtual async Task SendTestEmailAsync()
+        {
+            try
+            {
+                if (!await EmailSettingTestValidation.ValidateAll())
+                {
+                    return;
+                }
+
+                await EmailSettingsAppService.SendTestEmailAsync(ObjectMapper.Map<SendTestEmailViewModel, SendTestEmailInput>(SendTestEmailInput));
+
+                await Notify.Success(L["SuccessfullySent"]);
+            }
+            catch (Exception ex)
+            {
+                await HandleErrorAsync(ex);
+            }
+        }
 
         public class UpdateEmailSettingsViewModel
         {
@@ -138,6 +159,7 @@ namespace sendmailsms.Blazor.Pages
             public String Subject { get; set; }
 
             public String Body { get; set; }
+
         }
     }
 }
